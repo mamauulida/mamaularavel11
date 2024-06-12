@@ -2,23 +2,129 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
-
-    use Illuminate\Http\Request;  
-    use App\Http\Controllers\Controller;
+use App\Models\Prodi;
+use App\Models\Mahasiswa;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class MahasiswaController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $data = ['nama' => 'maulida', 'foto' =>'E020322089.jpg'];
-        $mahasiswa = DB::table('mahasiswa')->get();
-        return view('mahasiswa.index', compact ('data', 'mahasiswa')); 
+        //
+        $data = ['nama' => 'Maulida', 'foto' => 'E020322089.jpg'];
+        $mahasiswa = Mahasiswa::get();
+        return view('mahasiswa.index', compact(['data', 'mahasiswa']));
     }
 
-    public function show($id)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-
+        //
+        $data = ['nama' => 'Maulida', 'foto' => 'E020322089.jpg'];
+        $prodi = Prodi::all();
+        return view('mahasiswa.create', compact(['data', 'prodi']));
     }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+        $validateData = $request->validate(
+            [
+                'nim' => 'required|unique:mahasiswa|max:255',
+                'nama' => '',
+                'prodi_id' => '',
+                'no_hp' => '',
+                'alamat' => '',
+            ],
+            [
+                'nim.required' => 'Nim Harus diisi',
+                'nim.unique' => 'Nim sudah ada',
+                'nim.max' => 'Nim maksimal 255 karakter',
+            ]
+            );
+            $validateData['foto'] = $validateData['nim'] . '.jpg';
+            $validateData['password'] = Hash::make($validateData['nim']);
+            Mahasiswa::create($validateData);
+            return redirect ('/mahasiswa');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+{
+    $data = ['nama' => 'Maulida', 'foto' => 'E020322089.jpg'];
+    $mahasiswa = Mahasiswa::where('nim', $id)->first(); // Adjust if the primary key is 'nim'
+    $prodi = Prodi::all();
+    return view('mahasiswa.edit', compact(['data', 'mahasiswa', 'prodi']));
 }
 
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+       // Validate incoming request data
+$validateData = $request->validate(
+    [
+        'nim' => 'required|max:255',
+        'nama' => 'required|max:255', // Add validation rules for 'nama'
+        'prodi_id' => 'required|integer', // Ensure 'prodi_id' is required and must be an integer
+        'no_hp' => 'required|max:20', // Add validation rules for 'no_hp'
+        'alamat' => 'required|max:255', // Add validation rules for 'alamat'
+    ],
+    [
+        'nim.required' => 'Nim Harus diisi',
+        'nim.unique' => 'Nim sudah ada',
+        'nim.max' => 'Nim maksimal 255 karakter',
+        'nama.required' => 'Nama Harus diisi',
+        'nama.max' => 'Nama maksimal 255 karakter',
+        'prodi_id.required' => 'Prodi ID Harus diisi',
+        'prodi_id.integer' => 'Prodi ID harus berupa angka',
+        'no_hp.required' => 'Nomor HP Harus diisi',
+        'no_hp.max' => 'Nomor HP maksimal 20 karakter',
+        'alamat.required' => 'Alamat Harus diisi',
+        'alamat.max' => 'Alamat maksimal 255 karakter',
+    ]
+);
+
+// Set the 'foto' and 'password' fields
+$validateData['foto'] = $validateData['nim'] . '.jpg';
+$validateData['password'] = Hash::make($validateData['nim']);
+
+// Update the Mahasiswa record where 'nim' matches $id
+Mahasiswa::where('nim', $id)->update($validateData);
+
+// Redirect to the 'mahasiswa' page
+return redirect('/mahasiswa');
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        // Use the correct primary key column name
+        Mahasiswa::where('nim', $id)->delete();
+        return redirect('/mahasiswa');
+    }
+}
